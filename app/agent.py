@@ -41,7 +41,7 @@ def _get_input(val):
 async def collect_user_profile(ctx: Context, node_input=None):
     """Collects user role, target state, sector domain, and problem statement."""
     role = ctx.state.get("user_role")
-    domain = ctx.state.get("user_domain")
+    domain = ctx.state.get("user_domain") or ctx.state.get("sector")
     state = ctx.state.get("target_state")
     problem = ctx.state.get("problem_statement")
 
@@ -49,6 +49,7 @@ async def collect_user_profile(ctx: Context, node_input=None):
     if not role:
         if ctx.resume_inputs and "ask_role" in ctx.resume_inputs:
             role = _get_input(ctx.resume_inputs["ask_role"])
+            ctx.state["user_role"] = role
             yield Event(actions=EventActions(state_delta={"user_role": role}))
         else:
             yield RequestInput(
@@ -61,6 +62,7 @@ async def collect_user_profile(ctx: Context, node_input=None):
     if not state:
         if ctx.resume_inputs and "ask_state" in ctx.resume_inputs:
             state = _get_input(ctx.resume_inputs["ask_state"])
+            ctx.state["target_state"] = state
             yield Event(actions=EventActions(state_delta={"target_state": state}))
         else:
             yield RequestInput(
@@ -69,11 +71,13 @@ async def collect_user_profile(ctx: Context, node_input=None):
             )
             return
 
-    # Step 3: Ask domain
+    # Step 3: Ask domain (sector)
     if not domain:
         if ctx.resume_inputs and "ask_domain" in ctx.resume_inputs:
             domain = _get_input(ctx.resume_inputs["ask_domain"])
-            yield Event(actions=EventActions(state_delta={"user_domain": domain}))
+            ctx.state["user_domain"] = domain
+            ctx.state["sector"] = domain
+            yield Event(actions=EventActions(state_delta={"user_domain": domain, "sector": domain}))
         else:
             yield RequestInput(
                 interrupt_id="ask_domain",
@@ -85,6 +89,7 @@ async def collect_user_profile(ctx: Context, node_input=None):
     if not problem:
         if ctx.resume_inputs and "ask_problem" in ctx.resume_inputs:
             problem = _get_input(ctx.resume_inputs["ask_problem"])
+            ctx.state["problem_statement"] = problem
             yield Event(actions=EventActions(state_delta={"problem_statement": problem}))
         else:
             yield RequestInput(
@@ -93,9 +98,17 @@ async def collect_user_profile(ctx: Context, node_input=None):
             )
             return
 
+    ctx.state["user_role"] = role
+    ctx.state["user_domain"] = domain
+    ctx.state["sector"] = domain
+    ctx.state["target_state"] = state
+    ctx.state["problem_statement"] = problem
+    ctx.state["profile_complete"] = True
+
     yield Event(actions=EventActions(state_delta={
         "user_role": role,
         "user_domain": domain,
+        "sector": domain,
         "target_state": state,
         "problem_statement": problem,
         "profile_complete": True
@@ -119,6 +132,8 @@ async def security_check(ctx: Context, node_input=None):
 
     for pattern in injection_patterns:
         if re.search(pattern, problem, re.IGNORECASE):
+            ctx.state["security_status"] = "BLOCKED"
+            ctx.state["security_warning"] = "Prompt injection detected!"
             yield Event(actions=EventActions(state_delta={
                 "security_status": "BLOCKED",
                 "security_warning": "Prompt injection detected!"
@@ -140,6 +155,10 @@ async def security_check(ctx: Context, node_input=None):
             cleaned = re.sub(pattern, f"[{pii_type} REDACTED]", cleaned)
             warnings.append(f"{pii_type} redacted")
 
+    ctx.state["security_status"] = "PASSED"
+    ctx.state["cleaned_problem"] = cleaned
+    ctx.state["security_warnings"] = warnings
+
     yield Event(actions=EventActions(state_delta={
         "security_status": "PASSED",
         "cleaned_problem": cleaned,
@@ -151,12 +170,13 @@ async def analyze_gaps(ctx: Context, node_input=None):
     """Analyzes policy gaps using Gemini LLM"""
     security_status = ctx.state.get("security_status", "")
     if security_status == "BLOCKED":
+        ctx.state["gap_analysis"] = "Blocked due to security policy."
         yield Event(actions=EventActions(state_delta={
             "gap_analysis": "Blocked due to security policy."
         }))
         return
 
-    domain = ctx.state.get("user_domain", "")
+    domain = ctx.state.get("user_domain", "") or ctx.state.get("sector", "")
     state = ctx.state.get("target_state", "")
     problem = ctx.state.get("cleaned_problem", ctx.state.get("problem_statement", ""))
 
@@ -185,6 +205,8 @@ async def analyze_gaps(ctx: Context, node_input=None):
     )
     gap_analysis = response.choices[0].message.content
 
+    ctx.state["gap_analysis"] = gap_analysis
+
     yield Event(actions=EventActions(state_delta={
         "gap_analysis": gap_analysis
     }))
@@ -201,13 +223,14 @@ async def generate_recommendation(ctx: Context, node_input=None):
     """Generates structured policy proposal using Gemini LLM"""
     security_status = ctx.state.get("security_status", "")
     if security_status == "BLOCKED":
+        ctx.state["policy_recommendation"] = "Blocked due to security policy."
         yield Event(actions=EventActions(state_delta={
             "policy_recommendation": "Blocked due to security policy."
         }))
         return
 
     gap_analysis = ctx.state.get("gap_analysis", "")
-    domain = ctx.state.get("user_domain", "")
+    domain = ctx.state.get("user_domain", "") or ctx.state.get("sector", "")
     state = ctx.state.get("target_state", "")
 
     prompt = f"""
@@ -240,6 +263,8 @@ async def generate_recommendation(ctx: Context, node_input=None):
     )
     recommendation = response.choices[0].message.content
 
+    ctx.state["policy_recommendation"] = recommendation
+
     yield Event(actions=EventActions(state_delta={
         "policy_recommendation": recommendation
     }))
@@ -263,6 +288,8 @@ async def human_review(ctx: Context, node_input=None):
         warning = ctx.state.get("security_warning", "")
         if ctx.resume_inputs and "security_decision" in ctx.resume_inputs:
             decision_val = _get_input(ctx.resume_inputs["security_decision"])
+            ctx.state["review_decision"] = "rejected"
+            ctx.state["review_comments"] = f"Blocked: {warning} (User Acknowledged: {decision_val})"
             yield Event(actions=EventActions(state_delta={
                 "review_decision": "rejected",
                 "review_comments": f"Blocked: {warning} (User Acknowledged: {decision_val})"
@@ -289,6 +316,9 @@ async def human_review(ctx: Context, node_input=None):
             else:
                 decision = raw_input.strip()
                 comments = "No comments provided."
+
+            ctx.state["review_decision"] = decision
+            ctx.state["review_comments"] = comments
 
             yield Event(actions=EventActions(state_delta={
                 "review_decision": decision,

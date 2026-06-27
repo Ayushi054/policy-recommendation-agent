@@ -1,89 +1,186 @@
-# policy-rec-agent
+# 🏛️ AI-Based Government Policy & Scheme Recommendation System
 
-Simple ReAct agent
-Agent generated with `agents-cli` version `0.5.0`
+An intelligent multi-agent system that analyzes existing government schemes, identifies policy gaps, and generates data-driven policy recommendations for Indian policymakers.
 
-## Project Structure
+## 🎯 Problem Statement
+
+India has 1,000+ central and state government schemes, yet millions remain underserved due to:
+- **Policy Gaps:** Many demographics lack adequate scheme coverage
+- **Duplication:** Multiple ministries launch overlapping schemes
+- **Poor Implementation:** Lack of data-driven monitoring and feedback loops
+
+## 💡 Solution
+
+An AI agent system built on **Google ADK 2.0** that:
+1. Collects user context via Human-in-the-Loop interaction
+2. Screens input for security threats and PII
+3. Analyzes policy gaps using LLM
+4. Generates structured policy proposals
+5. Routes proposals for human review and approval
+
+## 🏗️ Architecture
 
 ```
-policy-rec-agent/
-├── app/         # Core agent code
-│   ├── agent.py               # Main agent logic
-│   ├── agent_runtime_app.py    # Agent Runtime application logic
-│   └── app_utils/             # App utilities and helpers
-├── tests/                     # Unit, integration, and load tests
-├── GEMINI.md                  # AI-assisted development guide
-└── pyproject.toml             # Project dependencies
+User Input
+    ↓
+[Node 1] collect_user_profile (HITL)
+    → Collects: Role, State, Sector, Problem Statement
+    ↓
+[Node 2] security_check
+    → PII Redaction (Aadhaar, PAN, Phone)
+    → Prompt Injection Defense
+    ↓
+[Node 3] analyze_gaps (LLM - Groq/Gemini)
+    → Gap Analysis Report
+    → Identifies underserved populations
+    ↓
+[Node 4] generate_recommendation (LLM - Groq/Gemini)
+    → Structured Policy Proposal
+    → Budget, Implementation Plan, KPIs
+    ↓
+[Node 5] human_review (HITL)
+    → Policymaker Approve/Reject
+    ↓
+[Node 6] finalize_output
+    → Final Policy Document + Next Steps
 ```
 
-> 💡 **Tip:** Use [Gemini CLI](https://github.com/google-gemini/gemini-cli) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
+## 🛠️ Tech Stack
 
-## Requirements
+| Component | Technology |
+|-----------|------------|
+| Agent Framework | Google ADK 2.0 |
+| LLM | Groq (llama-3.3-70b-versatile) / Gemini |
+| Development IDE | Google Antigravity |
+| MCP Server | Custom MyScheme MCP |
+| Agent Skills | 3 Custom Skills |
+| Security | PII Redaction + Prompt Injection Defense |
 
-Before you begin, ensure you have:
-- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
-- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
-- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
+## ✨ Key Features
 
+### 🤖 Multi-Agent Graph Workflow (ADK 2.0)
+- 6-node graph workflow using ADK 2.0 Workflow API
+- Directed edges with state management via EventActions
+- ResumabilityConfig for multi-turn conversations
+- **Robust State Persistence:** Directly mutates `ctx.state` to ensure reliable recovery upon execution resume, resolving multi-turn interruption bugs.
 
-## Quick Start
+### 🔒 Security Features
+- **PII Redaction:** Aadhaar, PAN, Phone numbers automatically redacted
+- **Prompt Injection Defense:** Detects and blocks adversarial inputs
+- **LLM Bypass:** Malicious inputs routed directly to human review
 
-Install `agents-cli` and its skills if not already installed:
+### 👥 Human-in-the-Loop (HITL)
+- **Node 1:** Collects user profile interactively
+- **Node 5:** Policymaker reviews and approves/rejects proposals
+
+### 🔌 MCP Server
+Custom MCP server for Indian government scheme data:
+- `search_schemes` — Search by sector/state/beneficiary
+- `get_scheme_details` — Get scheme information
+- `identify_gaps` — Identify policy gaps
+
+### 📚 Agent Skills
+Three custom Antigravity skills:
+- `policy-gap-analyzer` — Gap analysis instructions
+- `policy-recommendation-generator` — Proposal generation
+- `scheme-data-fetcher` — Data retrieval guidelines
+
+## 🚀 Setup Instructions
+
+### Prerequisites
+- Python 3.11+
+- uv package manager
+- Groq API key (free at console.groq.com)
+
+### Installation
 
 ```bash
-uvx google-agents-cli setup
+# Clone the repository
+git clone https://github.com/Ayushi054/policy-recommendation-agent.git
+cd policy-recommendation-agent
+
+# Install dependencies
+uv sync
+
+# Setup environment
+cp .env.example .env
+# Add your GROQ_API_KEY to .env file
 ```
 
-Install required packages:
+### Running the Agent
 
 ```bash
-agents-cli install
+# Start the ADK playground
+uv run adk web app --host 127.0.0.1 --port 8082
+
+# Open in browser
+# http://127.0.0.1:8082/dev-ui/?app=app
 ```
 
-Test the agent with a local web server:
+### Testing
 
 ```bash
-agents-cli playground
+# Run tests
+uv run pytest
+
+# Example query to try:
+# "I want to analyze policy gaps in Maharashtra for the education sector"
 ```
 
-You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
+## 📁 Project Structure
 
-## Commands
-
-| Command              | Description                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `agents-cli install` | Install dependencies using uv                                                         |
-| `agents-cli playground` | Launch local development environment                                                  |
-| `agents-cli lint`    | Run code quality checks                                                               |
-| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
-| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
-| `agents-cli deploy`  | Deploy agent to Agent Runtime                                                                |
-| `agents-cli publish gemini-enterprise` | Register deployed agent to Gemini Enterprise                    |
-
-## 🛠️ Project Management
-
-| Command | What It Does |
-|---------|--------------|
-| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
-| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
-| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
-
----
-
-## Development
-
-Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
-
-## Deployment
-
-```bash
-gcloud config set project <your-project-id>
-agents-cli deploy
+```
+policy-recommendation-agent/
+├── app/
+│   └── agent.py              # Main ADK 2.0 workflow
+├── mcp_server/
+│   └── myscheme_mcp.py       # MCP Server for scheme data
+├── .agents/
+│   └── skills/
+│       ├── policy-gap-analyzer/
+│       │   └── SKILL.md
+│       ├── policy-recommendation-generator/
+│       │   └── SKILL.md
+│       └── scheme-data-fetcher/
+│           └── SKILL.md
+├── tests/
+│   └── integration/
+├── .env.example              # Environment variables template
+├── pyproject.toml
+└── README.md
 ```
 
-To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
-To set up your production infrastructure, run `agents-cli infra cicd`.
+## 🎯 Example Output
 
-## Observability
+**Input:** Policy gaps in Maharashtra, Education sector
 
-Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+**Output — "Shiksha Sampark" (शिक्षा संपर्क)**
+- Ministry: Ministry of Education
+- Budget: ₹500 Crore
+- Beneficiaries: 2 million students
+- 3-phase implementation plan
+- KPIs and success metrics
+
+## 🔄 Switching LLM Backend
+
+```python
+# In app/agent.py - switch between Groq and Gemini
+
+# Groq (current - free)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+# Gemini (when quota available)
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+```
+
+## 📊 Competition Track
+
+**Agents for Good** — Helping Indian policymakers design better schemes for citizens
+
+## 🙏 Acknowledgements
+
+- Google ADK 2.0
+- Google Antigravity IDE
+- Kaggle 5-Day AI Agents Course
+- MyScheme Portal (myscheme.gov.in)
+- data.gov.in
