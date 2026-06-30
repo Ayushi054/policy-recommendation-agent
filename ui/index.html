@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Policy & Scheme Recommendation System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Marked Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        :root {
+            --navy-dark: #0D2137;
+            --navy-light: #1E3A8A;
+            --saffron: #FF9933;
+            --green: #138808;
+            --white: #ffffff;
+            --gray-light: #F8FAFC;
+            --gray-border: #E2E8F0;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gray-light);
+            color: var(--text-dark);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Style */
+        header {
+            background-color: var(--navy-dark);
+            color: var(--white);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-bottom: 4px solid var(--saffron);
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: var(--green);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-logo {
+            font-size: 2.2rem;
+            color: var(--white);
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #94A3B8;
+        }
+
+        /* Container & Grid Layout */
+        .main-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 992px) {
+            .main-container {
+                display: flex;
+                align-items: flex-start;
+                gap: 24px;
+            }
+            .card {
+                flex: 1;
+            }
+            .results-container {
+                flex: 1;
+                position: sticky;
+                top: 0;
+                align-self: flex-start;
+                height: 100vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Cards Style */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--gray-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            height: fit-content;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--navy-dark);
+            border-bottom: 2px solid var(--gray-light);
+            padding-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-border);
+            border-radius: 8px;
+            background-color: var(--white);
+            color: var(--text-dark);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--navy-light);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Button Style */
+        .btn {
+            background: linear-gradient(135deg, var(--navy-light) 0%, var(--navy-dark) 100%);
+            color: var(--white);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 0.9rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(13, 33, 55, 0.15);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(13, 33, 55, 0.25);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+            box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2) !important;
+        }
+        .btn-approve:hover {
+            box-shadow: 0 6px 15px rgba(22, 163, 74, 0.35) !important;
+        }
+        .btn-reject {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2) !important;
+        }
+        .btn-reject:hover {
+            box-shadow: 0 6px 15px rgba(220, 38, 38, 0.35) !important;
+        }
+
+        /* Results & Tabs Section */
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: 500px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--gray-border);
+            padding-bottom: 0.25rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 3px dashed transparent;
+        }
+
+        .tab-btn:hover {
+            color: var(--navy-light);
+            background-color: rgba(30, 58, 138, 0.04);
+        }
+
+        .tab-btn.active {
+            color: var(--navy-light);
+            border-bottom: 3px solid var(--saffron);
+            background-color: rgba(30, 58, 138, 0.06);
+        }
+
+        /* Security Badge */
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(19, 136, 8, 0.1);
+            color: var(--green);
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid rgba(19, 136, 8, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .security-badge.warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #D97706;
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .security-badge.blocked {
+            background-color: rgba(220, 38, 38, 0.1);
+            color: #DC2626;
+            border-color: rgba(220, 38, 38, 0.2);
+        }
+
+        /* Output Box Styling */
+        .output-box {
+            display: none;
+            background-color: var(--white);
+            border: 1px solid var(--gray-border);
+            border-radius: 12px;
+            padding: 2rem;
+            min-height: 400px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .output-box.active {
+            display: block;
+        }
+
+        /* Markdown styling inside output */
+        .output-content {
+            color: #334155;
+            font-size: 1.025rem;
+            line-height: 1.7;
+        }
+
+        .output-content h1, .output-content h2, .output-content h3 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--navy-dark);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .output-content h1 { font-size: 1.6rem; border-bottom: 1px solid var(--gray-border); padding-bottom: 0.5rem; }
+        .output-content h2 { font-size: 1.35rem; }
+        .output-content h3 { font-size: 1.15rem; }
+
+        .output-content p {
+            margin-bottom: 1rem;
+        }
+
+        .output-content ul, .output-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .output-content li {
+            margin-bottom: 0.4rem;
+        }
+
+        .output-content strong {
+            color: #0f172a;
+        }
+
+        .output-content code {
+            background-color: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #ef4444;
+        }
+
+        /* Loading Spinner */
+        .spinner-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            height: 400px;
+            width: 100%;
+            background-color: var(--white);
+            border: 1px solid var(--gray-border);
+            border-radius: 12px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(13, 33, 55, 0.1);
+            border-top: 5px solid var(--saffron);
+            border-bottom: 5px solid var(--green);
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+
+        .loading-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--navy-dark);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--navy-dark);
+            color: #94A3B8;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: auto;
+        }
+
+        .footer-highlight {
+            background: linear-gradient(90deg, var(--saffron), #ffffff, var(--green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .placeholder-text {
+            color: var(--text-muted);
+            text-align: center;
+            padding-top: 5rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <div class="header-title-container">
+                <i class="fa-solid fa-building-columns header-logo"></i>
+                <h1>AI Policy & Scheme Recommendation System</h1>
+            </div>
+            <p>Powered by Google ADK 2.0 | Agents for Good</p>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Sidebar Inputs Card -->
+        <section class="card">
+            <div class="card-title">
+                <i class="fa-solid fa-sliders"></i>
+                Parameters
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="role">Your Role</label>
+                <select class="form-select" id="role">
+                    <option value="Policymaker">Policymaker</option>
+                    <option value="Researcher">Researcher</option>
+                    <option value="NGO Worker">NGO Worker</option>
+                    <option value="Citizen">Citizen</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="state">Target State / UT</label>
+                <select class="form-select" id="state">
+                    <!-- Javascript will populate all states here -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="sector">Sector Domain</label>
+                <select class="form-select" id="sector">
+                    <option value="Education">Education</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Agriculture">Agriculture</option>
+                    <option value="Women">Women</option>
+                    <option value="Youth">Youth</option>
+                    <option value="Housing">Housing</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="focus">Priority Focus Group</label>
+                <select class="form-select" id="focus">
+                    <option value="Rural">Rural</option>
+                    <option value="Urban poor">Urban poor</option>
+                    <option value="Tribal">Tribal</option>
+                    <option value="Women">Women</option>
+                    <option value="Youth">Youth</option>
+                    <option value="Elderly">Elderly</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="problem">Problem Statement</label>
+                <textarea class="form-textarea" id="problem" placeholder="Describe the policy challenge in detail (max 200 words)... For example: Lack of high-quality primary schools in remote rural hilly areas leading to high dropout rates."></textarea>
+            </div>
+
+            <button class="btn" id="generate-btn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Generate Policy Recommendation
+            </button>
+        </section>
+
+        <!-- Main Display Content Column -->
+        <section class="results-container">
+            <div class="results-header">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('gap-tab', 'gap-box')">
+                        <i class="fa-solid fa-chart-simple"></i> Gap Analysis
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('policy-tab', 'policy-box')">
+                        <i class="fa-solid fa-file-invoice"></i> Policy Proposal
+                    </button>
+                </div>
+                <div class="security-badge" id="security-badge">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Security Check Passed</span>
+                </div>
+            </div>
+
+            <!-- Loading Spinner State -->
+            <div class="spinner-container" id="spinner-container">
+                <div class="spinner"></div>
+                <div class="loading-text" id="loading-text">Analyzing existing policy gaps...</div>
+            </div>
+
+            <!-- Tab 1 Output: Gap Analysis -->
+            <div class="output-box active" id="gap-box">
+                <div class="output-content" id="gap-content">
+                    <div class="placeholder-text">Click "Generate Policy Recommendation" to run the analysis.</div>
+                </div>
+            </div>
+
+            <!-- Tab 2 Output: Policy Proposal -->
+            <div class="output-box" id="policy-box">
+                <div class="output-content" id="policy-content">
+                    <div class="placeholder-text">The policy proposal draft will appear here after the gap analysis completes.</div>
+                </div>
+                <!-- Action buttons and feedback container -->
+                <div id="proposal-actions" style="display: none; margin-top: 1.5rem; border-top: 1px solid var(--gray-border); padding-top: 1.5rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center;" id="actions-buttons-row">
+                        <button class="btn btn-approve" id="approve-btn" style="flex: 1;">
+                            <i class="fa-solid fa-circle-check"></i> Approve Proposal
+                        </button>
+                        <button class="btn btn-reject" id="reject-btn" style="flex: 1;">
+                            <i class="fa-solid fa-circle-xmark"></i> Reject Proposal
+                        </button>
+                    </div>
+
+                    <!-- Rejection Input Section -->
+                    <div id="rejection-input-section" style="display: none; margin-top: 1rem; border-top: 1px dashed var(--gray-border); padding-top: 1rem; animation: fadeIn 0.3s ease;">
+                        <label class="form-label" for="rejection-reason" style="margin-bottom: 0.5rem; display: block; color: var(--navy-dark); font-weight: 600;">Please provide reason for rejection:</label>
+                        <textarea class="form-textarea" id="rejection-reason" placeholder="Explain why the proposal is rejected or what needs improvement..." style="margin-bottom: 0.75rem; min-height: 85px;"></textarea>
+                        <button class="btn btn-reject" id="submit-rejection-btn" style="width: 100%;">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Rejection
+                        </button>
+                    </div>
+
+                    <div id="action-feedback" style="display: none; margin-top: 1.25rem; padding: 1.5rem; border-radius: 8px; animation: fadeIn 0.3s ease;"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Built with Google ADK 2.0 | <span class="footer-highlight">Kaggle Agents for Good</span></p>
+    </footer>
+
+    <script>
+        const INDIAN_STATES = [
+            "All India", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+            "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+            "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+            "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+            "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+            "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+            "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+        ];
+
+        // Populate Target State dropdown
+        const stateSelect = document.getElementById('state');
+        INDIAN_STATES.forEach(state => {
+            const option = document.createElement('option');
+            option.value = state;
+            option.textContent = state;
+            if (state === "All India") option.selected = true;
+            stateSelect.appendChild(option);
+        });
+
+        // Tab Switching function
+        function switchTab(tabId, boxId) {
+            // Remove active classes
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.output-box').forEach(box => box.classList.remove('active'));
+
+            // Find current triggers
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(boxId));
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            const activeBox = document.getElementById(boxId);
+            if (activeBox) activeBox.classList.add('active');
+        }
+
+        // Generate Policy handler
+        document.getElementById('generate-btn').addEventListener('click', async () => {
+            const role = document.getElementById('role').value;
+            const state = document.getElementById('state').value;
+            const sector = document.getElementById('sector').value;
+            const focus = document.getElementById('focus').value;
+            const problem = document.getElementById('problem').value;
+
+            if (!problem.trim()) {
+                alert('Please describe your problem statement.');
+                return;
+            }
+
+            // UI Transitions: Show spinner, hide boxes
+            const spinner = document.getElementById('spinner-container');
+            const gapBox = document.getElementById('gap-box');
+            const policyBox = document.getElementById('policy-box');
+            const loadingText = document.getElementById('loading-text');
+            const generateBtn = document.getElementById('generate-btn');
+            const badge = document.getElementById('security-badge');
+
+            // Reset badge and feedbacks
+            badge.className = "security-badge";
+            badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Security Check Passed</span>';
+            document.getElementById('proposal-actions').style.display = 'none';
+            document.getElementById('actions-buttons-row').style.display = 'none';
+            document.getElementById('rejection-input-section').style.display = 'none';
+            document.getElementById('action-feedback').style.display = 'none';
+            document.getElementById('action-feedback').innerHTML = '';
+
+            spinner.style.display = 'flex';
+            gapBox.style.display = 'none';
+            policyBox.style.display = 'none';
+            generateBtn.disabled = true;
+
+            const stages = [
+                "Conducting security screening...",
+                "Analyzing central and state schemes...",
+                "Identifying policy implementation gaps...",
+                "Drafting structured policy proposal...",
+                "Finalizing KPIs and budget estimates..."
+            ];
+
+            let stageIdx = 0;
+            const stageInterval = setInterval(() => {
+                stageIdx = (stageIdx + 1) % stages.length;
+                loadingText.textContent = stages[stageIdx];
+            }, 2500);
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ role, state, sector, focus, problem })
+                });
+
+                clearInterval(stageInterval);
+
+                if (!response.ok) {
+                    throw new Error(`Server returned error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Check security status
+                if (result.security_status === "BLOCKED") {
+                    badge.className = "security-badge blocked";
+                    badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Blocked by Guardrails</span>';
+                    
+                    document.getElementById('gap-content').innerHTML = `<div style="color: #dc2626; font-weight: 600;"><i class="fa-solid fa-shield-halved"></i> Request blocked: ${result.security_message}</div>`;
+                    document.getElementById('policy-content').innerHTML = `<div style="color: #dc2626; font-weight: 600;"><i class="fa-solid fa-shield-halved"></i> Request blocked: ${result.security_message}</div>`;
+                } else {
+                    // Passed check
+                    if (result.warnings && result.warnings.length > 0) {
+                        badge.className = "security-badge warning";
+                        badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Warning: Data Redacted</span>';
+                        
+                        const warningHtml = `<div style="background-color: rgba(245, 158, 11, 0.08); border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 4px; color: #b45309; margin-bottom: 1.5rem; font-weight: 500;"><i class="fa-solid fa-triangle-exclamation"></i> <strong>PII Redacted:</strong> ${result.warnings.join(', ')}</div>`;
+                        document.getElementById('gap-content').innerHTML = warningHtml + marked.parse(result.gap_analysis);
+                    } else {
+                        badge.className = "security-badge";
+                        badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Security Check Passed</span>';
+                        document.getElementById('gap-content').innerHTML = marked.parse(result.gap_analysis);
+                    }
+                    
+                    document.getElementById('policy-content').innerHTML = marked.parse(result.policy_recommendation);
+                    currentPolicyProposal = result.policy_recommendation;
+                    
+                    // Extract Scheme Name for HITL feedback
+                    const schemeMatch = result.policy_recommendation.match(/(?:SCHEME NAME|Scheme Name):\s*\*?([^\*\n\r]+)/i);
+                    if (schemeMatch && schemeMatch[1]) {
+                        schemeName = schemeMatch[1].replace(/["']/g, "").trim();
+                    } else {
+                        const boldMatch = result.policy_recommendation.match(/\*\*1\.\s*SCHEME\s*NAME\*\*:\s*\*?([^\*\n\r]+)/i) || 
+                                          result.policy_recommendation.match(/\*\*SCHEME\s*NAME\*\*:\s*\*?([^\*\n\r]+)/i);
+                        if (boldMatch && boldMatch[1]) {
+                            schemeName = boldMatch[1].replace(/["']/g, "").trim();
+                        } else {
+                            schemeName = "Shiksha Sampark";
+                        }
+                    }
+
+                    document.getElementById('proposal-actions').style.display = 'block';
+                    document.getElementById('actions-buttons-row').style.display = 'flex';
+                    document.getElementById('rejection-input-section').style.display = 'none';
+                    document.getElementById('rejection-reason').value = '';
+                }
+
+                // Restore outputs view
+                spinner.style.display = 'none';
+                gapBox.style.display = '';
+                policyBox.style.display = '';
+                
+                // Set active tab to Gap Analysis
+                switchTab('gap-tab', 'gap-box');
+
+            } catch (err) {
+                clearInterval(stageInterval);
+                alert(`Error: ${err.message}`);
+                
+                document.getElementById('gap-content').innerHTML = `<div style="color: #dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> Error running analysis: ${err.message}</div>`;
+                
+                spinner.style.display = 'none';
+                gapBox.style.display = '';
+                policyBox.style.display = '';
+            } finally {
+                generateBtn.disabled = false;
+            }
+        });
+
+        // HITL Scheme name state
+        let schemeName = "Shiksha Sampark";
+        let currentPolicyProposal = "";
+
+        // Approve & Reject Button click handlers
+        document.getElementById('approve-btn').addEventListener('click', async () => {
+            if (!currentPolicyProposal) {
+                alert("No policy proposal generated yet.");
+                return;
+            }
+
+            const feedback = document.getElementById('action-feedback');
+            feedback.style.display = 'block';
+            feedback.style.backgroundColor = 'var(--white)';
+            feedback.style.color = 'var(--text-dark)';
+            feedback.style.border = '1px solid var(--gray-border)';
+            feedback.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 0.5rem 0;">
+                    <div class="spinner" style="width: 24px; height: 24px; border: 3px solid rgba(13, 33, 55, 0.1); border-top: 3px solid var(--saffron); border-bottom: 3px solid var(--green); border-radius: 50%; animation: spin 1.2s linear infinite;"></div>
+                    <span style="font-weight: 600; color: var(--navy-dark);">Processing approval...</span>
+                </div>
+            `;
+
+            // Artificial delay for smooth UX transition
+            const delayPromise = new Promise(resolve => setTimeout(resolve, 600));
+
+            try {
+                const responsePromise = fetch('/api/approve', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ policy_proposal: currentPolicyProposal })
+                });
+
+                const [response] = await Promise.all([responsePromise, delayPromise]);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to approve proposal: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                feedback.style.backgroundColor = 'rgba(19, 136, 8, 0.06)';
+                feedback.style.color = '#138808';
+                feedback.style.border = '1px solid rgba(19, 136, 8, 0.2)';
+                
+                feedback.innerHTML = `
+                    <div style="font-weight: 700; font-size: 1.15rem; margin-bottom: 0.75rem; color: #138808;">
+                        ✅ POLICY PROPOSAL APPROVED!
+                    </div>
+                    <p style="margin-bottom: 0.5rem; font-weight: 600; color: #1e293b;">
+                        "${schemeName}" has been approved: ${result.message}.
+                    </p>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.4;">
+                        <strong>Proposal ID:</strong> <code>${result.proposal_id}</code><br>
+                        <strong>Timestamp:</strong> ${new Date(result.timestamp).toLocaleString()}
+                    </div>
+                    <div style="font-weight: 700; color: var(--navy-dark); margin-bottom: 0.5rem; font-size: 0.95rem;">Next Steps:</div>
+                    <ol style="margin-left: 1.25rem; font-weight: 500; color: #475569; display: flex; flex-direction: column; gap: 0.35rem;">
+                        ${result.next_steps.map(step => `<li>${step}</li>`).join('')}
+                    </ol>
+                `;
+
+                // Disable buttons
+                document.getElementById('approve-btn').disabled = true;
+                document.getElementById('reject-btn').disabled = true;
+
+            } catch (err) {
+                feedback.style.backgroundColor = 'rgba(220, 38, 38, 0.06)';
+                feedback.style.color = '#dc2626';
+                feedback.style.border = '1px solid rgba(220, 38, 38, 0.2)';
+                feedback.innerHTML = `
+                    <div style="font-weight: 700; font-size: 1.15rem; margin-bottom: 0.5rem; color: #dc2626;">
+                        ❌ ERROR APPROVING PROPOSAL
+                    </div>
+                    <p style="font-weight: 600;">${err.message}</p>
+                `;
+            }
+        });
+
+        document.getElementById('reject-btn').addEventListener('click', () => {
+            document.getElementById('actions-buttons-row').style.display = 'none';
+            document.getElementById('rejection-input-section').style.display = 'block';
+            document.getElementById('rejection-reason').focus();
+        });
+
+        document.getElementById('submit-rejection-btn').addEventListener('click', async () => {
+            const reasonVal = document.getElementById('rejection-reason').value.trim();
+            if (!reasonVal) {
+                alert('Please provide a reason for rejection.');
+                return;
+            }
+
+            if (!currentPolicyProposal) {
+                alert("No policy proposal generated yet.");
+                return;
+            }
+
+            document.getElementById('rejection-input-section').style.display = 'none';
+
+            const feedback = document.getElementById('action-feedback');
+            feedback.style.display = 'block';
+            feedback.style.backgroundColor = 'var(--white)';
+            feedback.style.color = 'var(--text-dark)';
+            feedback.style.border = '1px solid var(--gray-border)';
+            feedback.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 0.5rem 0;">
+                    <div class="spinner" style="width: 24px; height: 24px; border: 3px solid rgba(13, 33, 55, 0.1); border-top: 3px solid var(--saffron); border-bottom: 3px solid var(--green); border-radius: 50%; animation: spin 1.2s linear infinite;"></div>
+                    <span style="font-weight: 600; color: var(--navy-dark);">Processing rejection...</span>
+                </div>
+            `;
+
+            // Artificial delay for smooth UX transition
+            const delayPromise = new Promise(resolve => setTimeout(resolve, 600));
+
+            try {
+                const responsePromise = fetch('/api/reject', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        policy_proposal: currentPolicyProposal,
+                        rejection_reason: reasonVal
+                    })
+                });
+
+                const [response] = await Promise.all([responsePromise, delayPromise]);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to reject proposal: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                feedback.style.backgroundColor = 'rgba(220, 38, 38, 0.06)';
+                feedback.style.color = '#dc2626';
+                feedback.style.border = '1px solid rgba(220, 38, 38, 0.2)';
+                
+                feedback.innerHTML = `
+                    <div style="font-weight: 700; font-size: 1.15rem; margin-bottom: 0.75rem; color: #dc2626;">
+                        ❌ PROPOSAL REJECTED
+                    </div>
+                    <p style="margin-bottom: 0.5rem; font-weight: 600; color: #1e293b;">
+                        "${schemeName}" has been rejected: ${result.message}.
+                    </p>
+                    <p style="margin-bottom: 1.25rem; font-weight: 500; color: #dc2626; padding-left: 0.5rem; border-left: 3px solid #dc2626;">
+                        <strong>Reason:</strong> ${result.reason}
+                    </p>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.4;">
+                        <strong>Timestamp:</strong> ${new Date(result.timestamp).toLocaleString()}
+                    </div>
+                    <div style="font-weight: 700; color: var(--navy-dark); margin-bottom: 0.5rem; font-size: 0.95rem;">Next Steps:</div>
+                    <ol style="margin-left: 1.25rem; font-weight: 500; color: #475569; display: flex; flex-direction: column; gap: 0.35rem;">
+                        ${result.next_steps.map(step => `<li>${step}</li>`).join('')}
+                    </ol>
+                `;
+
+                // Restore buttons row and disable them
+                document.getElementById('actions-buttons-row').style.display = 'flex';
+                document.getElementById('approve-btn').disabled = true;
+                document.getElementById('reject-btn').disabled = true;
+
+            } catch (err) {
+                feedback.style.backgroundColor = 'rgba(220, 38, 38, 0.06)';
+                feedback.style.color = '#dc2626';
+                feedback.style.border = '1px solid rgba(220, 38, 38, 0.2)';
+                feedback.innerHTML = `
+                    <div style="font-weight: 700; font-size: 1.15rem; margin-bottom: 0.5rem; color: #dc2626;">
+                        ❌ ERROR REJECTING PROPOSAL
+                    </div>
+                    <p style="font-weight: 600;">${err.message}</p>
+                `;
+                document.getElementById('actions-buttons-row').style.display = 'flex';
+            }
+        });
+    </script>
+
+</body>
+</html>
